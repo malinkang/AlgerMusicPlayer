@@ -747,10 +747,8 @@ async function downloadMusic(
           ARTIST: artistNames,
           ALBUM: songInfo?.al?.name || songInfo?.song?.album?.name || songInfo?.name || filename,
           LYRICS: lyricsContent || '',
-          TRACKNUMBER: songInfo?.no ? String(songInfo.no) : undefined,
-          DATE: songInfo?.publishTime
-            ? new Date(songInfo.publishTime).getFullYear().toString()
-            : undefined
+          TRACKNUMBER: songInfo?.no ? String(songInfo.no) : '',
+          DATE: songInfo?.publishTime ? new Date(songInfo.publishTime).getFullYear().toString() : ''
         };
 
         await writeFlacTags(

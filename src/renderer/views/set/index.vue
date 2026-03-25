@@ -219,6 +219,26 @@
           </setting-item>
         </setting-section>
 
+        <!-- Notion 配置 -->
+        <setting-section
+          id="notion"
+          title="Notion 配置"
+          @ref="(el) => (sectionRefs.notion = el as HTMLElement | null)"
+        >
+          <setting-item title="数据库 ID" :description="notionDatabaseId || '未配置'">
+            <template #action>
+              <n-button size="small" @click="reconfigureNotion">重新配置</n-button>
+            </template>
+          </setting-item>
+          <setting-item title="刷新数据" description="从 Notion 重新加载歌曲数据">
+            <template #action>
+              <n-button size="small" :loading="refreshingNotion" @click="refreshNotionData"
+                >刷新</n-button
+              >
+            </template>
+          </setting-item>
+        </setting-section>
+
         <!-- 播放设置 -->
         <setting-section
           id="playback"
@@ -561,6 +581,7 @@ import { useDebounceFn } from '@vueuse/core';
 import { useMessage } from 'naive-ui';
 import { computed, h, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 
 import localData from '@/../main/set.json';
 import { getUserDetail } from '@/api/login';
@@ -578,6 +599,7 @@ import { useUserStore } from '@/store/modules/user';
 import { type Platform } from '@/types/music';
 import { isElectron, isMobile } from '@/utils';
 import { openDirectory, selectDirectory } from '@/utils/fileOperation';
+import request from '@/utils/request';
 import { checkUpdate, UpdateResult } from '@/utils/update';
 
 import config from '../../../../package.json';
@@ -607,6 +629,33 @@ const settingsStore = useSettingsStore();
 const userStore = useUserStore();
 const message = useMessage();
 const { t } = useI18n();
+const router = useRouter();
+
+// ==================== Notion 配置 ====================
+const notionDatabaseId = ref(localStorage.getItem('notion_database_id') || '');
+const refreshingNotion = ref(false);
+
+const reconfigureNotion = () => {
+  localStorage.removeItem('notion_token');
+  localStorage.removeItem('notion_database_id');
+  router.push('/setup');
+};
+
+const refreshNotionData = async () => {
+  refreshingNotion.value = true;
+  try {
+    const res = await request.post('/api/refresh');
+    if (res.data?.code === 200) {
+      message.success(`已刷新，共 ${res.data.count} 首歌曲`);
+    } else {
+      message.error(res.data?.message || '刷新失败');
+    }
+  } catch (e: any) {
+    message.error(e.message || '刷新失败');
+  } finally {
+    refreshingNotion.value = false;
+  }
+};
 
 // ==================== 设置数据管理 ====================
 const saveSettings = useDebounceFn((data) => {
@@ -967,6 +1016,7 @@ interface SettingSectionConfig {
 const settingSections: SettingSectionConfig[] = [
   { id: 'basic' },
   { id: 'playback' },
+  { id: 'notion' },
   { id: 'application', electron: true },
   { id: 'network', electron: true },
   { id: 'system', electron: true },
@@ -979,7 +1029,7 @@ const navSections = computed(() => {
     .filter((section) => !section.electron || isElectron)
     .map((section) => ({
       id: section.id,
-      title: t(`settings.sections.${section.id}`)
+      title: section.id === 'notion' ? 'Notion 配置' : t(`settings.sections.${section.id}`)
     }));
 });
 
@@ -987,6 +1037,7 @@ const currentSection = ref('basic');
 const scrollbarRef = ref();
 const sectionRefs = reactive<Record<string, HTMLElement | null>>({
   basic: null,
+  notion: null,
   playback: null,
   application: null,
   network: null,

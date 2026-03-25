@@ -18,7 +18,7 @@ const baseURL = window.electron
 
 const request = axios.create({
   baseURL,
-  timeout: 15000,
+  timeout: 120000,
   withCredentials: true
 });
 

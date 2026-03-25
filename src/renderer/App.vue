@@ -26,6 +26,7 @@ import { useSettingsStore } from '@/store/modules/settings';
 import { useUserStore } from '@/store/modules/user';
 import { isElectron, isLyricWindow } from '@/utils';
 import { checkLoginStatus } from '@/utils/auth';
+import request from '@/utils/request';
 
 import { initAudioListeners, initMusicHook } from './hooks/MusicHook';
 import { audioService } from './services/audioService';
@@ -122,6 +123,17 @@ onMounted(async () => {
   playerStore.setIsPlay(false);
   if (isLyricWindow.value) {
     return;
+  }
+
+  // Send saved Notion config to server on startup
+  const notionToken = localStorage.getItem('notion_token');
+  const databaseId = localStorage.getItem('notion_database_id');
+  if (notionToken && databaseId) {
+    try {
+      await request.post('/api/config', { notionToken, databaseId });
+    } catch (e) {
+      console.error('Failed to send config to server:', e);
+    }
   }
   // 初始化 MusicHook，注入 playerStore
   initMusicHook(playerStore);

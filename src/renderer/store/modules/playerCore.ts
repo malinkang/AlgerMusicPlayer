@@ -531,8 +531,7 @@ export const usePlayerCoreStore = defineStore(
           currentSound.pause();
         }
 
-        const numericId =
-          typeof currentSong.id === 'string' ? parseInt(currentSong.id, 10) : currentSong.id;
+        const numericId = currentSong.id;
 
         console.log(`使用音源 ${sourcePlatform} 重新解析歌曲 ${numericId}`);
 

@@ -11,6 +11,7 @@ export default defineConfig({
   base: './',
   // 项目src
   root: resolve('src/renderer'),
+  envDir: resolve('.'),
   resolve: {
     alias: {
       '@': resolve('src/renderer'),

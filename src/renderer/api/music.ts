@@ -1,5 +1,4 @@
 import { musicDB } from '@/hooks/MusicHook';
-import { useSettingsStore, useUserStore } from '@/store';
 import type { ILyric } from '@/types/lyric';
 import type { SongResult } from '@/types/music';
 import request from '@/utils/request';
@@ -14,47 +13,21 @@ export const getMusicQualityDetail = (id: number) => {
 };
 
 // 根据音乐Id获取音乐播放URl
-export const getMusicUrl = async (id: number, isDownloaded: boolean = false) => {
-  const userStore = useUserStore();
-  const settingStore = useSettingsStore();
-  // 判断是否登录
-  try {
-    if (userStore.user && isDownloaded && userStore.user.vipType !== 0) {
-      const url = '/song/download/url/v1';
-      const res = await request.get(url, {
-        params: {
-          id,
-          level: settingStore.setData.musicQuality || 'higher',
-          encodeType: settingStore.setData.musicQuality == 'lossless' ? 'aac' : 'flac',
-          // level为lossless时，encodeType=flac时网易云会返回hires音质，encodeType=aac时网易云会返回lossless音质
-          cookie: `${localStorage.getItem('token')} os=pc;`
-        }
-      });
-
-      if (res.data.data.url) {
-        return { data: { data: [{ ...res.data.data }] } };
-      }
-    }
-  } catch (error) {
-    console.error('error', error);
-  }
-
+export const getMusicUrl = async (id: number | string) => {
   return await request.get('/song/url/v1', {
     params: {
-      id,
-      level: settingStore.setData.musicQuality || 'higher',
-      encodeType: settingStore.setData.musicQuality == 'lossless' ? 'aac' : 'flac'
+      id
     }
   });
 };
 
 // 获取歌曲详情
-export const getMusicDetail = (ids: Array<number>) => {
+export const getMusicDetail = (ids: Array<number | string>) => {
   return request.get('/song/detail', { params: { ids: ids.join(',') } });
 };
 
 // 根据音乐Id获取音乐歌词
-export const getMusicLrc = async (id: number) => {
+export const getMusicLrc = async (id: number | string) => {
   const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000; // 10天的毫秒数
 
   try {
@@ -89,10 +62,11 @@ export const getMusicLrc = async (id: number) => {
  * @returns 解析结果
  */
 export const getParsingMusicUrl = async (
-  id: number,
+  id: number | string,
   data: SongResult
 ): Promise<MusicParseResult> => {
-  return await MusicParser.parseMusic(id, data);
+  const numId = typeof id === 'number' ? id : 0;
+  return await MusicParser.parseMusic(numId, data);
 };
 
 // 收藏歌曲
