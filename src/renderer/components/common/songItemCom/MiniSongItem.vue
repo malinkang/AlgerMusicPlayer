@@ -26,9 +26,7 @@
         :src="getImgUrl(item.picUrl, '100y100')"
         class="song-item-img"
         preview-disabled
-        :img-props="{
-          crossorigin: 'anonymous'
-        }"
+        :img-props="{}"
         @load="onImageLoad"
       />
     </template>

@@ -61,9 +61,7 @@ const renderSongPreview = () => {
         src: getImgUrl(props.item.picUrl || props.item.al?.picUrl, '100y100'),
         class: 'w-10 h-10 rounded-lg flex-shrink-0',
         previewDisabled: true,
-        imgProps: {
-          crossorigin: 'anonymous'
-        }
+        imgProps: {}
       }),
       h(
         'div',
