@@ -118,8 +118,7 @@ export const loadLrc = async (id: string | number): Promise<ILyric> => {
   }
 
   try {
-    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    const { data } = await getMusicLrc(numericId);
+    const { data } = await getMusicLrc(id);
     const { lyrics, times } = parseLyrics(data?.yrc?.lyric || data?.lrc?.lyric);
 
     // 检查是否有逐字歌词

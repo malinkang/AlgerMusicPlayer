@@ -472,27 +472,20 @@ app.get('/song/url/v1', async (req, res) => {
 
     const song = songsCache.find(s => s.id === id || s.id === String(id));
 
-    let audioUrl = song?.audioUrl || '';
+    let audioUrl = '';
 
-    // If we have a notion page, re-fetch to get a fresh file URL (they expire)
-    if (song?.notionPageId && !audioUrl) {
+    // Always re-fetch from Notion to get a fresh signed URL (they expire after ~1h)
+    if (song?.notionPageId) {
       try {
         const page = await getPage(song.notionPageId);
         audioUrl = getPropValue(page.properties['音频']) || '';
+        if (audioUrl) song.audioUrl = audioUrl; // Update cache
       } catch (e) {
         console.error('Failed to refresh audio URL:', e.message);
+        audioUrl = song?.audioUrl || ''; // Fall back to cached URL
       }
-    }
-
-    // If still no audio URL, try re-fetching the page to get fresh signed URL
-    if (song?.notionPageId && audioUrl) {
-      try {
-        const page = await getPage(song.notionPageId);
-        const freshUrl = getPropValue(page.properties['音频']);
-        if (freshUrl) audioUrl = freshUrl;
-      } catch (e) {
-        // Use cached URL
-      }
+    } else {
+      audioUrl = song?.audioUrl || '';
     }
 
     res.json({
@@ -565,9 +558,24 @@ app.get('/lyric/new', async (req, res) => {
     if (song?.lyricsUrl) {
       try {
         const lrcRes = await fetch(song.lyricsUrl);
+        if (!lrcRes.ok) throw new Error(`HTTP ${lrcRes.status}`);
         lrcText = await lrcRes.text();
       } catch (e) {
-        console.error('Failed to fetch lyrics:', e.message);
+        // Cached URL may have expired — re-fetch the page from Notion
+        console.warn('Lyrics URL expired, re-fetching from Notion:', e.message);
+        if (song.notionPageId) {
+          try {
+            const page = await getPage(song.notionPageId);
+            const freshUrl = getPropValue(page.properties['歌词']);
+            if (freshUrl) {
+              song.lyricsUrl = freshUrl;
+              const retry = await fetch(freshUrl);
+              if (retry.ok) lrcText = await retry.text();
+            }
+          } catch (e2) {
+            console.error('Failed to re-fetch lyrics from Notion:', e2.message);
+          }
+        }
       }
     }
 

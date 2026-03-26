@@ -63,6 +63,11 @@ export const formatNumber = (num: string | number) => {
 export const getImgUrl = (url: string | undefined, size: string = '') => {
   if (!url) return '';
 
+  // Notion S3 URLs or other external URLs — return as-is
+  if (url.includes('s3.us-west-2.amazonaws.com') || url.includes('secure.notion')) {
+    return url;
+  }
+
   if (url.includes('thumbnail')) {
     // 只替换最后一个 thumbnail 参数的尺寸
     return url.replace(/thumbnail=\d+y\d+(?!.*thumbnail)/, `thumbnail=${size}`);
