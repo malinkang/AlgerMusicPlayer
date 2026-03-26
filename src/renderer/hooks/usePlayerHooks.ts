@@ -1,4 +1,4 @@
-import { getMusicLrc, getMusicUrl } from '@/api/music';
+import { getMusicLrc } from '@/api/music';
 import { playbackRequestManager } from '@/services/playbackRequestManager';
 import type { ILyric, ILyricText, IWordData, SongResult } from '@/types/music';
 import { getImgUrl } from '@/utils';
@@ -9,7 +9,7 @@ import { parseLyrics as parseYrcLyrics } from '@/utils/yrcParser';
  * 获取歌曲播放URL（独立函数）
  */
 export const getSongUrl = async (
-  id: string | number,
+  _id: string | number,
   songData: SongResult,
   _isDownloaded: boolean = false,
   requestId?: string
@@ -23,23 +23,6 @@ export const getSongUrl = async (
 
     if (songData.playMusicUrl) {
       return songData.playMusicUrl;
-    }
-
-    // 直接从服务器获取音频URL
-    const { data } = await getMusicUrl(id);
-
-    // 验证请求
-    if (requestId && !playbackRequestManager.isRequestValid(requestId)) {
-      console.log(`[getSongUrl] 获取URL后请求已失效: ${requestId}`);
-      throw new Error('Request cancelled');
-    }
-
-    if (data && data.data && data.data[0]) {
-      const songDetail = data.data[0];
-      if (songDetail.url) {
-        console.log('获取音频URL成功');
-        return songDetail.url;
-      }
     }
 
     console.warn('未找到音频URL');

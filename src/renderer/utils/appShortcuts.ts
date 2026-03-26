@@ -113,25 +113,6 @@ export async function handleShortcutAction(action: string) {
           );
         }
         break;
-      case 'toggleFavorite': {
-        const isFavorite = playerStore.favoriteList.includes(Number(playerStore.playMusic.id));
-        const numericId = Number(playerStore.playMusic.id);
-        console.log(`[AppShortcuts] toggleFavorite 当前状态: ${isFavorite}, ID: ${numericId}`);
-        if (isFavorite) {
-          playerStore.removeFromFavorite(numericId);
-          console.log(`[AppShortcuts] 已从收藏中移除: ${numericId}`);
-        } else {
-          playerStore.addToFavorite(numericId);
-          console.log(`[AppShortcuts] 已添加到收藏: ${numericId}`);
-        }
-        showToast(
-          isFavorite
-            ? t('player.playBar.unFavorite', { name: playerStore.playMusic.name })
-            : t('player.playBar.favorite', { name: playerStore.playMusic.name }),
-          isFavorite ? 'ri-heart-line' : 'ri-heart-fill'
-        );
-        break;
-      }
       default:
         console.log('未知的快捷键动作:', action);
         break;

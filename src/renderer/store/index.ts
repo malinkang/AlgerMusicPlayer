@@ -19,8 +19,6 @@ export * from './modules/lyric';
 export * from './modules/menu';
 export * from './modules/music';
 export * from './modules/player';
-export * from './modules/recommend';
-export * from './modules/search';
 export * from './modules/settings';
 export * from './modules/user';
 

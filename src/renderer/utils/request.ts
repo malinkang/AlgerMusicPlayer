@@ -1,7 +1,5 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
 
-import { useUserStore } from '@/store/modules/user';
-
 import { getSetData, isElectron, isMobile } from '.';
 
 let setData: any = null;
@@ -46,15 +44,6 @@ request.interceptors.request.use(
       timestamp: Date.now(),
       device: isElectron ? 'pc' : isMobile ? 'mobile' : 'web'
     };
-    const token = localStorage.getItem('token');
-    if (token && config.method !== 'post') {
-      config.params.cookie = config.params.cookie !== undefined ? config.params.cookie : token;
-    } else if (token && config.method === 'post') {
-      config.data = {
-        ...config.data,
-        cookie: token
-      };
-    }
     if (isElectron) {
       const proxyConfig = setData?.proxyConfig;
       if (proxyConfig?.enable && ['http', 'https'].includes(proxyConfig?.protocol)) {
@@ -87,15 +76,6 @@ request.interceptors.response.use(
     // 如果没有配置，直接返回错误
     if (!config) {
       return Promise.reject(error);
-    }
-
-    // 处理 301 状态码
-    if (error.response?.status === 301 && config.params.noLogin !== true) {
-      // 使用 store mutation 清除用户信息
-      const userStore = useUserStore();
-      userStore.handleLogout();
-      console.log(`301 状态码，清除登录信息后重试第 ${config.retryCount} 次`);
-      config.retryCount = 3;
     }
 
     // 检查是否还可以重试

@@ -132,31 +132,6 @@
             </div>
           </div>
 
-          <!-- Token管理 -->
-          <setting-item :title="t('settings.basic.tokenManagement')">
-            <template #description>
-              <div class="text-sm text-gray-500 mb-2">
-                {{ t('settings.basic.tokenStatus') }}:
-                {{ currentToken ? t('settings.basic.tokenSet') : t('settings.basic.tokenNotSet') }}
-              </div>
-              <div v-if="currentToken" class="text-xs text-gray-400 mb-2 font-mono break-all">
-                {{ currentToken.substring(0, 50) }}...
-              </div>
-            </template>
-            <template #action>
-              <div class="flex gap-2">
-                <n-button size="small" @click="showTokenModal = true">
-                  {{
-                    currentToken ? t('settings.basic.modifyToken') : t('settings.basic.setToken')
-                  }}
-                </n-button>
-                <n-button v-if="currentToken" size="small" type="error" @click="clearToken">
-                  {{ t('settings.basic.clearToken') }}
-                </n-button>
-              </div>
-            </template>
-          </setting-item>
-
           <!-- 动画设置 -->
           <setting-item :title="t('settings.basic.animation')">
             <template #description>
@@ -255,66 +230,6 @@
               :options="qualityOptions"
               class="w-40 max-md:w-full"
             />
-          </setting-item>
-
-          <!-- 会员购买链接 -->
-          <div
-            class="p-3 max-md:p-2 bg-light-100 dark:bg-dark-100 rounded-lg text-sm max-md:text-xs"
-          >
-            <div>大家还是需要支持正版，本软件只做开源探讨</div>
-            <div class="mt-2">各大音乐会员购买链接</div>
-            <div class="flex gap-4 max-md:gap-2 flex-wrap mt-1">
-              <a
-                v-for="link in memberLinks"
-                :key="link.url"
-                class="text-green-400 hover:text-green-500"
-                :href="link.url"
-                target="_blank"
-              >
-                {{ link.name }}
-              </a>
-            </div>
-          </div>
-
-          <!-- 音源设置 -->
-          <setting-item v-if="isElectron" :title="t('settings.playback.musicSources')">
-            <template #description>
-              <div class="flex items-center gap-2">
-                <n-switch v-model:value="setData.enableMusicUnblock">
-                  <template #checked>{{ t('common.on') }}</template>
-                  <template #unchecked>{{ t('common.off') }}</template>
-                </n-switch>
-                <span>{{ t('settings.playback.musicUnblockEnableDesc') }}</span>
-              </div>
-              <div v-if="setData.enableMusicUnblock" class="mt-2 text-sm">
-                <span class="text-gray-500">{{ t('settings.playback.selectedMusicSources') }}</span>
-                <span v-if="musicSources.length > 0" class="text-gray-400">{{
-                  musicSources.join(', ')
-                }}</span>
-                <span v-else class="text-red-500 text-xs">{{
-                  t('settings.playback.noMusicSources')
-                }}</span>
-              </div>
-            </template>
-            <n-button
-              size="small"
-              :disabled="!setData.enableMusicUnblock"
-              @click="showMusicSourcesModal = true"
-            >
-              {{ t('settings.playback.configureMusicSources') }}
-            </n-button>
-          </setting-item>
-
-          <!-- 状态栏显示 -->
-          <setting-item
-            v-if="platform === 'darwin'"
-            :title="t('settings.playback.showStatusBar')"
-            :description="t('settings.playback.showStatusBarContent')"
-          >
-            <n-switch v-model:value="setData.showTopAction">
-              <template #checked>{{ t('common.on') }}</template>
-              <template #unchecked>{{ t('common.off') }}</template>
-            </n-switch>
           </setting-item>
 
           <!-- 自动播放 -->
@@ -512,44 +427,9 @@
                 <n-button size="small" :loading="checking" @click="checkForUpdates(true)">
                   {{ checking ? t('settings.about.checking') : t('settings.about.checkUpdate') }}
                 </n-button>
-                <n-button v-if="updateInfo.hasUpdate" size="small" @click="openReleasePage">
-                  {{ t('settings.about.gotoUpdate') }}
-                </n-button>
               </div>
             </template>
           </setting-item>
-
-          <!-- 作者信息 -->
-          <setting-item
-            :title="t('settings.about.author')"
-            :description="t('settings.about.authorDesc')"
-            clickable
-            @click="openAuthor"
-          >
-            <n-button size="small" @click.stop="openAuthor">
-              <i class="ri-github-line mr-1"></i>{{ t('settings.about.gotoGithub') }}
-            </n-button>
-          </setting-item>
-        </setting-section>
-
-        <!-- 捐赠支持 -->
-        <setting-section
-          id="donation"
-          :title="t('settings.sections.donation')"
-          @ref="(el) => (sectionRefs.donation = el as HTMLElement | null)"
-        >
-          <setting-item
-            :title="t('settings.sections.donation')"
-            :description="t('donation.message')"
-          >
-            <n-button text @click="toggleDonationList">
-              <template #icon>
-                <i :class="isDonationListVisible ? 'ri-eye-line' : 'ri-eye-off-line'" />
-              </template>
-              {{ isDonationListVisible ? t('common.hide') : t('common.show') }}
-            </n-button>
-          </setting-item>
-          <donation-list v-if="isDonationListVisible" />
         </setting-section>
       </div>
       <play-bottom />
@@ -563,15 +443,9 @@
         :config="proxyForm"
         @confirm="handleProxyConfirm"
       />
-      <music-source-settings v-model:show="showMusicSourcesModal" v-model:sources="musicSources" />
       <remote-control-setting v-model:visible="showRemoteControlModal" />
     </template>
 
-    <cookie-settings-modal
-      v-model:show="showTokenModal"
-      :initial-value="currentToken"
-      @save="handleTokenSave"
-    />
     <clear-cache-settings v-model:show="showClearCacheModal" @confirm="clearCache" />
   </div>
 </template>
@@ -584,19 +458,13 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 
 import localData from '@/../main/set.json';
-import { getUserDetail } from '@/api/login';
-import DonationList from '@/components/common/DonationList.vue';
 import PlayBottom from '@/components/common/PlayBottom.vue';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import ClearCacheSettings from '@/components/settings/ClearCacheSettings.vue';
-import CookieSettingsModal from '@/components/settings/CookieSettingsModal.vue';
-import MusicSourceSettings from '@/components/settings/MusicSourceSettings.vue';
 import ProxySettings from '@/components/settings/ProxySettings.vue';
 import RemoteControlSetting from '@/components/settings/ServerSetting.vue';
 import ShortcutSettings from '@/components/settings/ShortcutSettings.vue';
 import { useSettingsStore } from '@/store/modules/settings';
-import { useUserStore } from '@/store/modules/user';
-import { type Platform } from '@/types/music';
 import { isElectron, isMobile } from '@/utils';
 import { openDirectory, selectDirectory } from '@/utils/fileOperation';
 import request from '@/utils/request';
@@ -608,14 +476,6 @@ import SettingNav from './SettingNav.vue';
 import SettingSection from './SettingSection.vue';
 
 // ==================== 常量配置 ====================
-const ALL_PLATFORMS: Platform[] = ['migu', 'kugou', 'kuwo', 'pyncmd', 'bilibili'];
-
-const memberLinks = [
-  { name: '网易云音乐会员', url: 'https://music.163.com/store/vip' },
-  { name: 'QQ音乐会员', url: 'https://y.qq.com/portal/vipportal/' },
-  { name: '酷狗音乐会员', url: 'https://vip.kugou.com/' }
-];
-
 const fontPreviews = [
   { key: 'chinese' },
   { key: 'english' },
@@ -624,9 +484,7 @@ const fontPreviews = [
 ];
 
 // ==================== 平台和Store ====================
-const platform = window.electron ? window.electron.ipcRenderer.sendSync('get-platform') : 'web';
 const settingsStore = useSettingsStore();
-const userStore = useUserStore();
 const message = useMessage();
 const { t } = useI18n();
 const router = useRouter();
@@ -778,14 +636,6 @@ const checkForUpdates = async (isClick = false) => {
   }
 };
 
-const openReleasePage = () => {
-  settingsStore.showUpdateModal = true;
-};
-
-const openAuthor = () => {
-  window.open(setData.value.authorUrl);
-};
-
 const restartApp = () => {
   window.electron.ipcRenderer.send('restart');
 };
@@ -879,20 +729,10 @@ watch(
   { immediate: true }
 );
 
-// ==================== 捐赠列表 ====================
-const isDonationListVisible = ref(localStorage.getItem('donationListVisible') !== 'false');
-
-const toggleDonationList = () => {
-  isDonationListVisible.value = !isDonationListVisible.value;
-  localStorage.setItem('donationListVisible', isDonationListVisible.value.toString());
-};
-
 // ==================== 弹窗控制 ====================
 const showClearCacheModal = ref(false);
 const showShortcutModal = ref(false);
-const showMusicSourcesModal = ref(false);
 const showRemoteControlModal = ref(false);
-const showTokenModal = ref(false);
 
 const handleShortcutsChange = (shortcuts: any) => {
   console.log('快捷键已更新:', shortcuts);
@@ -907,9 +747,6 @@ const clearCache = async (selectedCacheTypes: string[]) => {
         break;
       case 'favorite':
         localStorage.removeItem('favoriteList');
-        break;
-      case 'user':
-        userStore.handleLogout();
         break;
       case 'settings':
         if (window.electron) {
@@ -951,62 +788,6 @@ const clearCache = async (selectedCacheTypes: string[]) => {
   message.success(t('settings.system.messages.clearSuccess'));
 };
 
-// ==================== Token管理 ====================
-const currentToken = ref(localStorage.getItem('token') || '');
-
-const handleTokenSave = async (token: string) => {
-  try {
-    const originalToken = localStorage.getItem('token');
-    localStorage.setItem('token', token);
-
-    const user = await getUserDetail();
-    if (user.data && user.data.profile) {
-      userStore.setUser(user.data.profile);
-      currentToken.value = token;
-      message.success(t('settings.cookie.message.saveSuccess'));
-      setTimeout(() => window.location.reload(), 1000);
-    } else {
-      if (originalToken) localStorage.setItem('token', originalToken);
-      else localStorage.removeItem('token');
-      message.error(t('settings.cookie.message.saveError'));
-    }
-  } catch {
-    const originalToken = localStorage.getItem('token');
-    if (originalToken) localStorage.setItem('token', originalToken);
-    else localStorage.removeItem('token');
-    message.error(t('settings.cookie.message.saveError'));
-  }
-};
-
-const clearToken = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  currentToken.value = '';
-  userStore.user = null;
-  message.success(t('settings.basic.clearToken') + '成功');
-  setTimeout(() => window.location.reload(), 1000);
-};
-
-watch(
-  () => localStorage.getItem('token'),
-  (newToken) => {
-    currentToken.value = newToken || '';
-  },
-  { immediate: true }
-);
-
-// ==================== 音源设置 ====================
-const musicSources = computed({
-  get: () => {
-    if (!setData.value.enabledMusicSources) return ALL_PLATFORMS;
-    return setData.value.enabledMusicSources as Platform[];
-  },
-  set: (newValue: Platform[]) => {
-    const valuesToSet = newValue.length > 0 ? [...new Set(newValue)] : ALL_PLATFORMS;
-    setData.value = { ...setData.value, enabledMusicSources: valuesToSet };
-  }
-});
-
 // ==================== 导航相关 ====================
 interface SettingSectionConfig {
   id: string;
@@ -1020,8 +801,7 @@ const settingSections: SettingSectionConfig[] = [
   { id: 'application', electron: true },
   { id: 'network', electron: true },
   { id: 'system', electron: true },
-  { id: 'about' },
-  { id: 'donation' }
+  { id: 'about' }
 ];
 
 const navSections = computed(() => {

@@ -154,9 +154,6 @@
                   {{ index < artistList.length - 1 ? ' / ' : '' }}
                 </span>
               </p>
-              <div class="favorite-icon" @click="toggleFavorite">
-                <i class="ri-heart-3-fill" :class="{ favorite: isFavorite }"></i>
-              </div>
             </div>
 
             <!-- 歌词区域 -->
@@ -260,9 +257,6 @@
                   {{ item.name }}{{ index < artistList.length - 1 ? ' / ' : '' }}
                 </span>
               </p>
-            </div>
-            <div class="favorite-icon landscape" @click="toggleFavorite">
-              <i class="ri-heart-3-fill" :class="{ favorite: isFavorite }"></i>
             </div>
           </div>
 
@@ -476,19 +470,6 @@ const { playMode, playModeIcon, playModeText, togglePlayMode: togglePlayModeBase
 // 打开播放列表
 const showPlaylist = () => {
   playerStore.setPlayListDrawerVisible(true);
-};
-
-// 喜欢歌曲
-const isFavorite = computed(() => {
-  return playerStore.favoriteList.includes(playMusic.value.id as number);
-});
-
-const toggleFavorite = () => {
-  if (isFavorite.value) {
-    playerStore.removeFromFavorite(playMusic.value.id as number);
-  } else {
-    playerStore.addToFavorite(playMusic.value.id as number);
-  }
 };
 
 // 歌词全屏控制

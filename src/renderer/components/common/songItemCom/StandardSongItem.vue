@@ -138,8 +138,8 @@ const onToggleSelect = () => {
 };
 const onImageLoad = (event: Event) => baseItem.value?.imageLoad(event);
 const onArtistClick = (id: number) => baseItem.value?.handleArtistClick(id);
-const onToggleFavorite = (event: Event) => {
-  baseItem.value?.toggleFavorite(event);
+const onToggleFavorite = (_event: Event) => {
+  baseItem.value?.toggleFavorite();
 };
 const onPlayMusic = () => {
   baseItem.value?.playMusicEvent(props.item);

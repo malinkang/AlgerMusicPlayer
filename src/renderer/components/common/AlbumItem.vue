@@ -26,11 +26,10 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 
-import type { AlbumHistoryItem } from '@/hooks/AlbumHistoryHook';
 import { getImgUrl } from '@/utils';
 
 interface Props {
-  item: AlbumHistoryItem;
+  item: any;
   showCount?: boolean;
   showDelete?: boolean;
 }
@@ -41,8 +40,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  click: [item: AlbumHistoryItem];
-  delete: [item: AlbumHistoryItem];
+  click: [item: any];
+  delete: [item: any];
 }>();
 
 const { t } = useI18n();

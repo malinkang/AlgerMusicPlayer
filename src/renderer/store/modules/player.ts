@@ -1,24 +1,19 @@
 /**
  * - usePlayerCoreStore: 核心播放控制（播放/暂停、音量、速度）
  * - usePlaylistStore: 播放列表管理（列表、索引、模式、上下一首）
- * - useFavoriteStore: 收藏管理（收藏列表、不喜欢列表）
  * - useSleepTimerStore: 定时关闭（时间/歌曲数/列表结束）
- * - useIntelligenceModeStore: 心动模式
  */
 
 import { defineStore, storeToRefs } from 'pinia';
 import { computed } from 'vue';
 
 // 导入所有拆分的子 stores
-import { useFavoriteStore } from './favorite';
-import { useIntelligenceModeStore } from './intelligenceMode';
 import { usePlayerCoreStore } from './playerCore';
 import { usePlaylistStore } from './playlist';
 import { type SleepTimerInfo, SleepTimerType, useSleepTimerStore } from './sleepTimer';
 
 export { type SleepTimerInfo, SleepTimerType };
 export { getSongUrl, loadLrc, useLyrics, useSongDetail, useSongUrl } from '@/hooks/usePlayerHooks';
-export { isBilibiliIdMatch } from '@/utils/playerUtils';
 
 /**
  * 聚合 Player Store
@@ -27,9 +22,7 @@ export const usePlayerStore = defineStore('player', () => {
   // 获取所有子 stores
   const playerCore = usePlayerCoreStore();
   const playlist = usePlaylistStore();
-  const favorite = useFavoriteStore();
   const sleepTimer = useSleepTimerStore();
-  const intelligenceMode = useIntelligenceModeStore();
 
   // 使用 storeToRefs 获取响应式引用
   const { play, isPlay, playMusic, playMusicUrl, musicFull, playbackRate, volume, userPlayIntent } =
@@ -38,11 +31,7 @@ export const usePlayerStore = defineStore('player', () => {
   const { playList, playListIndex, playMode, originalPlayList, playListDrawerVisible } =
     storeToRefs(playlist);
 
-  const { favoriteList, dislikeList } = storeToRefs(favorite);
-
   const { sleepTimer: sleepTimerState, showSleepTimer } = storeToRefs(sleepTimer);
-
-  const { isIntelligenceMode, intelligenceModeInfo } = storeToRefs(intelligenceMode);
 
   // ==================== Computed ====================
   const currentSong = computed(() => playerCore.currentSong);
@@ -63,13 +52,6 @@ export const usePlayerStore = defineStore('player', () => {
   const initializePlayState = async () => {
     await playerCore.initializePlayState();
     await playlist.initializePlaylist();
-  };
-
-  /**
-   * 初始化收藏列表（从服务器同步）
-   */
-  const initializeFavoriteList = async () => {
-    await favorite.initializeFavoriteList();
   };
 
   // ==================== 返回所有状态和方法 ====================
@@ -128,16 +110,6 @@ export const usePlayerStore = defineStore('player', () => {
     setPlayListDrawerVisible: playlist.setPlayListDrawerVisible,
     setPlay: playlist.setPlay,
 
-    // ========== 收藏管理 (Favorite) ==========
-    favoriteList,
-    dislikeList,
-
-    // Favorite - Actions
-    addToFavorite: favorite.addToFavorite,
-    removeFromFavorite: favorite.removeFromFavorite,
-    addToDislikeList: favorite.addToDislikeList,
-    removeFromDislikeList: favorite.removeFromDislikeList,
-
     // ========== 定时关闭 (SleepTimer) ==========
     sleepTimer: sleepTimerState,
     showSleepTimer,
@@ -154,15 +126,7 @@ export const usePlayerStore = defineStore('player', () => {
     setSleepTimerAtPlaylistEnd: sleepTimer.setSleepTimerAtPlaylistEnd,
     clearSleepTimer: sleepTimer.clearSleepTimer,
 
-    // ========== 心动模式 (IntelligenceMode) ==========
-    isIntelligenceMode,
-    intelligenceModeInfo,
-
-    // IntelligenceMode - Actions
-    playIntelligenceMode: intelligenceMode.playIntelligenceMode,
-
     // ========== 初始化方法 ==========
-    initializePlayState,
-    initializeFavoriteList
+    initializePlayState
   };
 });

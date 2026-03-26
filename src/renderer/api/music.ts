@@ -1,25 +1,8 @@
 import { musicDB } from '@/hooks/MusicHook';
 import type { ILyric } from '@/types/lyric';
-import type { SongResult } from '@/types/music';
 import request from '@/utils/request';
 
-import { MusicParser, type MusicParseResult } from './musicParser';
-
 const { addData, getData, deleteData } = musicDB;
-
-// 获取音乐音质详情
-export const getMusicQualityDetail = (id: number) => {
-  return request.get('/song/music/detail', { params: { id } });
-};
-
-// 根据音乐Id获取音乐播放URl
-export const getMusicUrl = async (id: number | string) => {
-  return await request.get('/song/url/v1', {
-    params: {
-      id
-    }
-  });
-};
 
 // 获取歌曲详情
 export const getMusicDetail = (ids: Array<number | string>) => {
@@ -61,73 +44,17 @@ export const getMusicLrc = async (id: number | string) => {
  * @param data 歌曲数据
  * @returns 解析结果
  */
-export const getParsingMusicUrl = async (
-  id: number | string,
-  data: SongResult
-): Promise<MusicParseResult> => {
-  const numId = typeof id === 'number' ? id : 0;
-  return await MusicParser.parseMusic(numId, data);
-};
-
-// 收藏歌曲
-export const likeSong = (id: number, like: boolean = true) => {
-  return request.get('/like', { params: { id, like } });
-};
-
-// 将每日推荐中的歌曲标记为不感兴趣，并获取一首新歌
-export const dislikeRecommendedSong = (id: number | string) => {
-  return request.get('/recommend/songs/dislike', {
-    params: { id }
-  });
-};
-// 获取用户喜欢的音乐列表
-export const getLikedList = (uid: number) => {
-  return request.get('/likelist', {
-    params: { uid, noLogin: true }
-  });
-};
-
-// 创建歌单
-export const createPlaylist = (params: { name: string; privacy: number }) => {
-  return request.post('/playlist/create', params);
-};
-
-// 添加或删除歌单歌曲
-export const updatePlaylistTracks = (params: {
-  op: 'add' | 'del';
-  pid: number;
-  tracks: string;
-}) => {
-  return request.post('/playlist/tracks', params);
-};
-
-/**
- * 根据类型获取列表数据
- * @param type 列表类型 album/playlist
- * @param id 列表ID
- */
-export function getMusicListByType(type: string, id: string) {
-  if (type === 'album') {
-    return getAlbumDetail(id);
-  } else if (type === 'playlist') {
-    return getPlaylistDetail(id);
-  }
-  return Promise.reject(new Error('未知列表类型'));
-}
-
-/**
- * 获取专辑详情
- * @param id 专辑ID
- */
-export function getAlbumDetail(id: string) {
-  return request({
-    url: '/album',
-    method: 'get',
-    params: {
-      id
+export const getParsingMusicUrl = async (_id: number | string, data: any): Promise<any> => {
+  // 简化后的占位函数，实际逻辑已通过 server 代理
+  return {
+    data: {
+      code: 200,
+      data: {
+        url: (data as any).playMusicUrl
+      }
     }
-  });
-}
+  };
+};
 
 /**
  * 获取歌单详情
@@ -140,59 +67,5 @@ export function getPlaylistDetail(id: string) {
     params: {
       id
     }
-  });
-}
-
-export function subscribePlaylist(params: { t: number; id: number }) {
-  return request({
-    url: '/playlist/subscribe',
-    method: 'post',
-    params
-  });
-}
-
-/**
- * 收藏/取消收藏专辑
- * @param params t: 1 收藏, 2 取消收藏; id: 专辑id
- */
-export function subscribeAlbum(params: { t: number; id: number }) {
-  return request({
-    url: '/album/sub',
-    method: 'post',
-    params
-  });
-}
-
-/**
- * 获取历史日推可用日期列表
- */
-export function getHistoryRecommendDates() {
-  return request({
-    url: '/history/recommend/songs',
-    method: 'get'
-  });
-}
-
-/**
- * 获取历史日推详情数据
- * @param date 日期，格式：YYYY-MM-DD
- */
-export function getHistoryRecommendSongs(date: string) {
-  return request({
-    url: '/history/recommend/songs/detail',
-    method: 'get',
-    params: { date }
-  });
-}
-
-/**
- * 心动模式/智能播放
- * @param params id: 歌曲id, pid: 歌单id, sid: 要开始播放的歌曲id(可选)
- */
-export function getIntelligenceList(params: { id: number; pid: number; sid?: number }) {
-  return request({
-    url: '/playmode/intelligence/list',
-    method: 'get',
-    params
   });
 }

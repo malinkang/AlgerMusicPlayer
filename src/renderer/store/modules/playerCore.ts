@@ -4,19 +4,15 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
 import i18n from '@/../i18n/renderer';
-import { getBilibiliAudioUrl } from '@/api/bilibili';
 import { getParsingMusicUrl } from '@/api/music';
-import { useMusicHistory } from '@/hooks/MusicHistoryHook';
 import { useLyrics, useSongDetail } from '@/hooks/usePlayerHooks';
 import { audioService } from '@/services/audioService';
 import { playbackRequestManager } from '@/services/playbackRequestManager';
 import { preloadService } from '@/services/preloadService';
-import { SongSourceConfigManager } from '@/services/SongSourceConfigManager';
 import type { Platform, SongResult } from '@/types/music';
 import { getImgUrl } from '@/utils';
 import { getImageLinearBackground } from '@/utils/linearColor';
 
-const musicHistory = useMusicHistory();
 const { message } = createDiscreteApi(['message']);
 
 /**
@@ -168,11 +164,6 @@ export const usePlayerCoreStore = defineStore(
      * 核心播放处理函数
      */
     const handlePlayMusic = async (music: SongResult, isPlay: boolean = true) => {
-      // 如果是新歌曲，重置已尝试的音源（使用 SongSourceConfigManager 按歌曲隔离）
-      if (music.id !== playMusic.value.id) {
-        SongSourceConfigManager.clearTriedSources(music.id);
-      }
-
       // 创建新的播放请求并取消之前的所有请求
       const requestId = playbackRequestManager.createRequest(music);
       console.log(`[handlePlayMusic] 开始处理歌曲: ${music.name}, 请求ID: ${requestId}`);
@@ -239,15 +230,10 @@ export const usePlayerCoreStore = defineStore(
           (prev: string, curr: any) => `${prev}${curr.name}/`,
           ''
         )}`;
-      } else if (music.source === 'bilibili' && music?.song?.ar?.[0]) {
-        title += ` - ${music.song.ar[0].name}`;
       }
       document.title = 'AlgerMusic - ' + title;
 
       try {
-        // 添加到历史记录
-        musicHistory.addMusic(music);
-
         // 获取歌曲详情
         const updatedPlayMusic = await getSongDetail(originalMusic, requestId);
 
@@ -352,36 +338,6 @@ export const usePlayerCoreStore = defineStore(
           console.log('[playAudio] 恢复播放进度:', initialPosition);
         }
 
-        // B站视频URL检查
-        if (
-          playMusic.value.source === 'bilibili' &&
-          (!playMusicUrl.value || playMusicUrl.value === 'undefined')
-        ) {
-          console.log('B站视频URL无效，尝试重新获取');
-
-          if (playMusic.value.bilibiliData) {
-            try {
-              const proxyUrl = await getBilibiliAudioUrl(
-                playMusic.value.bilibiliData.bvid,
-                playMusic.value.bilibiliData.cid
-              );
-
-              // 再次验证请求
-              if (requestId && !playbackRequestManager.isRequestValid(requestId)) {
-                console.log(`[playAudio] 获取B站URL后请求已失效: ${requestId}`);
-                return null;
-              }
-
-              (playMusic.value as any).playMusicUrl = proxyUrl;
-              playMusicUrl.value = proxyUrl;
-            } catch (error) {
-              console.error('获取B站音频URL失败:', error);
-              message.error(i18n.global.t('player.playFailed'));
-              return null;
-            }
-          }
-        }
-
         // 使用 PreloadService 获取音频
         // 优先使用已预加载的 sound（通过 consume 获取并从缓存中移除）
         // 如果没有预加载，则进行加载
@@ -430,8 +386,6 @@ export const usePlayerCoreStore = defineStore(
         window.dispatchEvent(
           new CustomEvent('audio-ready', { detail: { sound: newSound, shouldPlay } })
         );
-
-        // 时长检查已在 preloadService.ts 中完成
 
         return newSound;
       } catch (error) {
@@ -506,25 +460,13 @@ export const usePlayerCoreStore = defineStore(
     /**
      * 使用指定音源重新解析当前歌曲
      */
-    const reparseCurrentSong = async (sourcePlatform: Platform, isAuto: boolean = false) => {
+    const reparseCurrentSong = async (sourcePlatform: Platform) => {
       try {
         const currentSong = playMusic.value;
         if (!currentSong || !currentSong.id) {
           console.warn('没有有效的播放对象');
           return false;
         }
-
-        if (currentSong.source === 'bilibili') {
-          console.warn('B站视频不支持重新解析');
-          return false;
-        }
-
-        // 使用 SongSourceConfigManager 保存配置
-        SongSourceConfigManager.setConfig(
-          currentSong.id,
-          [sourcePlatform],
-          isAuto ? 'auto' : 'manual'
-        );
 
         const currentSound = audioService.getCurrentSound();
         if (currentSound) {
@@ -577,11 +519,6 @@ export const usePlayerCoreStore = defineStore(
         try {
           console.log('恢复上次播放的音乐:', playMusic.value.name);
           const isPlaying = settingStore.setData.autoPlay;
-
-          if (playMusic.value.source === 'bilibili' && playMusic.value.bilibiliData) {
-            console.log('恢复B站视频播放', playMusic.value.bilibiliData);
-            playMusic.value.playMusicUrl = undefined;
-          }
 
           await handlePlayMusic(
             { ...playMusic.value, isFirstPlay: true, playMusicUrl: undefined },
