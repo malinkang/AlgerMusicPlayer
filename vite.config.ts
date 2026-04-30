@@ -12,6 +12,9 @@ export default defineConfig({
   // 项目src
   root: resolve('src/renderer'),
   envDir: resolve('.'),
+  build: {
+    target: 'esnext'
+  },
   resolve: {
     alias: {
       '@': resolve('src/renderer'),

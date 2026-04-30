@@ -120,6 +120,11 @@ function getPageCover(page) {
   return '';
 }
 
+function extractNeteaseId(url) {
+  const match = String(url || '').match(/[?&]id=(\d+)/);
+  return match ? match[1] : '';
+}
+
 // ---------- Data loading ----------
 
 /** Load all songs from Notion and build cache. */
@@ -183,8 +188,8 @@ async function loadSongs() {
       }
     }
 
-    const trackId = getPropValue(props['Id']) || page.id;
-    const songUrl = getPropValue(props['链接']) || '';
+    const songUrl = getPropValue(props['网易云链接']) || getPropValue(props['链接']) || '';
+    const trackId = extractNeteaseId(songUrl) || page.id;
     const audioUrl = getPropValue(props['音频']) || '';
     const lyricsUrl = getPropValue(props['歌词']) || '';
     const dateAdded = getPropValue(props['日期']) || '';
